@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <limits> 
 using namespace std;
-
 class Student {
 private:
     string surname;
@@ -18,9 +18,9 @@ public:
     Student();
     Student(const string& surname, bool needsDorm, int experience,
         bool workedTeacher, const string& graduated, const string& language);
-    Student(const Student& other); // Конструктор копирования
+    Student(const Student& other);
 
-    // Геттеры
+    
     string getSurname() const { return surname; }
     bool getNeedsDormitory() const { return needsDormitory; }
     int getWorkExperience() const { return workExperience; }
@@ -28,7 +28,6 @@ public:
     string getGraduatedFrom() const { return graduatedFrom; }
     string getLanguageStudied() const { return languageStudied; }
 
-    // Сеттеры
     void setSurname(const string& s) { surname = s; }
     void setNeedsDormitory(bool needs) { needsDormitory = needs; }
     void setWorkExperience(int exp) { workExperience = exp; }
@@ -36,23 +35,24 @@ public:
     void setGraduatedFrom(const string& grad) { graduatedFrom = grad; }
     void setLanguageStudied(const string& lang) { languageStudied = lang; }
 
-    // Методы
+    
     bool hasTeachingExperience(int minYears = 2) const;
     bool graduatedFromPedagogicalCollege() const;
     void displayInfo() const;
 
-    // Перегруженные операции
+    //перегруженные операции
     Student& operator=(const Student& other);
     friend ostream& operator<<(ostream& os, const Student& student);
+    friend istream& operator>>(istream& is, Student& student);
 
-    // Операции сравнения
+    //операции сравнения
     bool operator==(const Student& other) const;
     bool operator!=(const Student& other) const;
-    bool operator>(const Student& other) const; // по стажу работы
+    bool operator>(const Student& other) const;
 
-    // Арифметические операции
-    Student operator+(int years); // увеличение стажа
-    Student operator+(const string& newLanguage); // добавление языка
+    //арифметические операции
+    Student operator+(int years);
+    Student operator+(const string& newLanguage);
 };
 
 // Реализация конструкторов
@@ -109,6 +109,37 @@ ostream& operator<<(ostream& os, const Student& student) {
     return os;
 }
 
+// Реализация оператора ввода
+istream& operator>>(istream& is, Student& student) {
+    cout << "Введите данные студента:\n";
+
+    cout << "Фамилия: ";
+    is >> student.surname;
+
+    cout << "Нуждается в общежитии (1 - да, 0 - нет): ";
+    int dorm;
+    is >> dorm;
+    student.needsDormitory = (dorm == 1);
+
+    cout << "Стаж работы (лет): ";
+    is >> student.workExperience;
+
+    cout << "Работал учителем (1 - да, 0 - нет): ";
+    int teacher;
+    is >> teacher;
+    student.workedAsTeacher = (teacher == 1);
+
+    is.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    cout << "Что окончил: ";
+    getline(is, student.graduatedFrom);
+
+    cout << "Какой язык изучал: ";
+    getline(is, student.languageStudied);
+
+    return is;
+}
+
 bool Student::operator==(const Student& other) const {
     return surname == other.surname && workExperience == other.workExperience;
 }
@@ -137,6 +168,7 @@ Student Student::operator+(const string& newLanguage) {
     }
     return temp;
 }
+
 class StudentGroup {
 private:
     vector<Student> students;
@@ -255,7 +287,6 @@ void StudentGroup::displayAll() const {
     }
 }
 
-
 void demonstrateOperations() {
     cout << "=== ДЕМОНСТРАЦИЯ ПЕРЕГРУЖЕННЫХ ОПЕРАЦИЙ ===\n\n";
 
@@ -286,31 +317,80 @@ void demonstrateOperations() {
     cout << "s1 + 'испанский': " << s6 << "\n\n";
 }
 
-int main() {
-    // Демонстрация перегруженных операций
-    demonstrateOperations();
+void demonstrateInputOutputOperations() {
+    cout << "=== ДЕМОНСТРАЦИЯ ОПЕРАТОРОВ ВВОДА/ВЫВОДА ===\n\n";
 
-    // Создание группы студентов
+    Student newStudent;
+    cout << "Создание нового студента:\n";
+    cin >> newStudent;  //ерегруженный оператор >>
+
+    cout << "\nВведенный студент:\n";
+    cout << newStudent << "\n\n";  //перегруженный оператор <<
+}
+
+void interactiveDemo() {
+    cout << "=== ИНТЕРАКТИВНОЕ ДОБАВЛЕНИЕ СТУДЕНТОВ ===\n\n";
+
+    // УДАЛИТЬ эту группу и использовать ту, что в main
+    // StudentGroup group;  ← УБРАТЬ ЭТУ СТРОКУ
+
+    // Вместо этого передаем группу из main как параметр
+}
+
+// ИЗМЕНИТЬ функцию, чтобы она принимала группу как параметр
+void interactiveDemo(StudentGroup& group) {
+    cout << "=== ИНТЕРАКТИВНОЕ ДОБАВЛЕНИЕ СТУДЕНТОВ ===\n\n";
+
+    cout << "Текущий список студентов:\n";
+    group.displayAll();
+    cout << "\n";
+
+    // пользователь добавляет нового студента
+    char choice;
+    do {
+        cout << "Хотите добавить нового студента? (y/n): ";
+        cin >> choice;
+
+        if (choice == 'y' || choice == 'Y') {
+            Student newStudent;
+            cin >> newStudent;
+
+            group.addStudent(newStudent);
+            cout << "Студент добавлен!\n\n";
+        }
+    } while (choice == 'y' || choice == 'Y');
+
+    cout << "\nИтоговый список студентов:\n";
+    group.displayAll();
+}
+
+int main() {
+    demonstrateOperations();
+    demonstrateInputOutputOperations();
+
+    // СОЗДАЕМ ОДНУ группу
     StudentGroup group;
 
-    // Добавление студентов
+    // СНАЧАЛА добавляем базовых студентов
     group.addStudent(Student("Иванов", true, 3, true, "педучилище", "английский"));
     group.addStudent(Student("Петров", false, 1, false, "школа", "немецкий"));
     group.addStudent(Student("Сидорова", true, 5, true, "педучилище", "французский"));
     group.addStudent(Student("Козлова", true, 2, true, "техникум", "английский"));
     group.addStudent(Student("Смирнов", false, 0, false, "педучилище", "немецкий"));
 
+    // ПЕРЕДАЕМ существующую группу в interactiveDemo
+    interactiveDemo(group);
+
     cout << "=== ИНФОРМАЦИЯ О ГРУППЕ СТУДЕНТОВ ===\n\n";
 
     cout << "Все студенты:\n";
-    group.displayAll();
+    group.displayAll();  // Теперь покажет ВСЕХ студентов
     cout << "\n";
 
-    // 1) Количество нуждающихся в общежитии
+    // Остальной код остается без изменений...
     cout << "1. Нуждающихся в общежитии: "
         << group.countNeedingDormitory() << " человек\n\n";
 
-    // 2) Списки студентов, проработавших 2 и более лет учителем
     cout << "2. Студенты с опытом работы учителем (2+ лет):\n";
     auto teachers = group.getTeachersWithExperience();
     for (const auto& teacher : teachers) {
@@ -318,7 +398,6 @@ int main() {
     }
     cout << "\n";
 
-    // 3) Списки окончивших педучилище
     cout << "3. Окончившие педучилище:\n";
     auto pedGraduates = group.getPedagogicalCollegeGraduates();
     for (const auto& graduate : pedGraduates) {
@@ -326,7 +405,6 @@ int main() {
     }
     cout << "\n";
 
-    // 4) Списки языковых групп
     cout << "4. Языковые группы:\n";
     auto languages = group.getLanguageGroups();
     for (const auto& language : languages) {
@@ -343,7 +421,6 @@ int main() {
     cout << "   group[0]: " << group[0] << "\n";
     cout << "   group[2]: " << group[2] << "\n";
 
-    // Изменение через индексацию
     group[1] = group[1] + 1; // увеличение стажа
     cout << "   После group[1] = group[1] + 1: " << group[1] << "\n";
 
